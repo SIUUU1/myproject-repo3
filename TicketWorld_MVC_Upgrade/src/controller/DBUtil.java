@@ -3,8 +3,11 @@ package controller;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -24,7 +27,7 @@ public class DBUtil {
 			Class.forName("oracle.jdbc.driver.OracleDriver");
 			// DATABASE CONNECT
 			con = DriverManager.getConnection(url, user, password);
-			//System.out.println("데이터베이스 접속 성공");
+			// System.out.println("데이터베이스 접속 성공");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 			System.out.println("데이타베이스 드라이버 로드 실패");
@@ -40,4 +43,66 @@ public class DBUtil {
 		}
 		return con;
 	}
+
+	public static void closeResources(Connection con, CallableStatement cstmt) {
+		try {
+			if (cstmt != null) {
+				cstmt.close();
+			}
+			if (con != null) {
+				con.close();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void closeResources(Connection con, PreparedStatement pstmt, ResultSet rs) {
+		try {
+			if (rs != null) {
+				rs.close();
+			}
+			if (pstmt != null) {
+				pstmt.close();
+			}
+			if (con != null) {
+				con.close();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void closeResources(Connection con, PreparedStatement pstmt) {
+		try {
+			if (pstmt != null) {
+				pstmt.close();
+			}
+			if (con != null) {
+				con.close();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void closeResources(Connection con, CallableStatement cstmt, ResultSet rs1, ResultSet rs2) {
+		try {
+			if (rs1 != null) {
+				rs1.close();
+			}
+			if (rs2 != null) {
+				rs2.close();
+			}
+			if (cstmt != null) {
+				cstmt.close();
+			}
+			if (con != null) {
+				con.close();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 }

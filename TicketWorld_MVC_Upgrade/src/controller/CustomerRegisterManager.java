@@ -89,25 +89,31 @@ public class CustomerRegisterManager {
 
 	// 회원가입시 회원 정보 저장하는 기능구현
 	public static void customerRegister() {
-		// 중복 피하기
-		System.out.print("아이디 : ");
-		String c_id = sc.nextLine();
-		System.out.print("비밀번호 : ");
-		String c_pw = sc.nextLine();
-		System.out.print("이름 : ");
-		String c_name = sc.nextLine();
-		System.out.print("연락처(예:010-0000-0000) : ");
-		String c_phone = sc.nextLine();
-		System.out.print("이메일 : ");
-		String c_email = sc.nextLine();
-		System.out.print("주소 : ");
-		String c_address = sc.nextLine();
-		System.out.print("나이 : ");
-		int c_age = sc.nextInt();
-		sc.nextLine();
-		CustomerVO cvo = new CustomerVO(c_id, c_pw, c_name, c_phone, c_email, c_address, c_age);
+		boolean exitFlag = false;
+		while (!exitFlag) {
+			System.out.print("아이디 : ");
+			String c_id = sc.nextLine();
+			// 아이디 중복 피하기
+			if (cdao.preventOverlapId(c_id)) {
+				System.out.print("비밀번호 : ");
+				String c_pw = sc.nextLine();
+				System.out.print("이름 : ");
+				String c_name = sc.nextLine();
+				System.out.print("연락처(예:010-0000-0000) : ");
+				String c_phone = sc.nextLine();
+				System.out.print("이메일 : ");
+				String c_email = sc.nextLine();
+				System.out.print("주소 : ");
+				String c_address = sc.nextLine();
+				System.out.print("나이 : ");
+				int c_age = sc.nextInt();
+				sc.nextLine();
+				CustomerVO cvo = new CustomerVO(c_id, c_pw, c_name, c_phone, c_email, c_address, c_age);
 
-		cdao.setCustomerRegister(cvo);
+				cdao.setCustomerRegister(cvo);
+				exitFlag = true;
+			}
+		}
 	}
 
 	// 본인 확인 기능구현

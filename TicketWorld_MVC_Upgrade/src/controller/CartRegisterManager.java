@@ -22,31 +22,33 @@ public class CartRegisterManager {
 		return cartList;
 	}
 
-	// 장바구니 항목 지우기기능구현
+	// 장바구니 항목 지우기 기능구현
 	public static void cartDeleteItem() {
+		//장바구니 출력
 		cartList();
 		System.out.print("삭제할 공연ID를 입력하세요. ");
 		int p_id = Integer.parseInt(sc.nextLine());
 		int p_numId = -1;
 		int c_numId = -1;
-		// 해당 공연 찾기
-		for (int i = 0; i < TicketWorldMain.performanceInfoList.size(); i++) {
-			if (p_id == TicketWorldMain.performanceInfoList.get(i).getPerformance_id()) {
-				p_numId = i;
+		// 해당 공연 장바구니에서 찾기
+		for (int i = 0; i < cartList.size(); i++) {
+			if (p_id == cartList.get(i).getPerformance_id()) {
+				c_numId = i;
 				break;
 			}
 		}
-		// 해당 공연 장바구니에서 찾기
-		if (p_numId != -1) {
-			for (int i = 0; i < cartList.size(); i++) {
-				if (p_id == cartList.get(i).getPerformance_id()) {
-					c_numId = i;
+		// 해당 공연 찾기
+		if (c_numId != -1) {
+			for (int i = 0; i < TicketWorldMain.performanceInfoList.size(); i++) {
+				if (p_id == TicketWorldMain.performanceInfoList.get(i).getPerformance_id()) {
+					p_numId = i;
 					break;
 				}
 			}
 		}
+
 		if (c_numId == -1) {
-			System.out.println("삭제할 공연ID가 존재하지 않습니다.");
+			System.out.println("장바구니에 삭제할 공연ID가 존재하지 않습니다.");
 		} else {
 			// 좌석선택해제하기
 			cancelSeats(p_numId, c_numId);
@@ -57,7 +59,7 @@ public class CartRegisterManager {
 			PerformanceRegisterManager.performanceUpdateAfterTicketing(p_numId);
 			// 공연정보 로딩
 			PerformanceRegisterManager.performanceList();
-			cartList();
+			System.out.println("장바구니가 성공적으로 비워졌습니다.");
 		}
 	}
 
@@ -109,7 +111,7 @@ public class CartRegisterManager {
 		}
 		// 장바구니비우기
 		cartdao.setCartDelete(TicketWorldMain.customer.getCustomer_id());
-		cartList();
+		System.out.println("장바구니가 성공적으로 비워졌습니다.");
 	}
 
 	// 공연예매기능구현
@@ -208,6 +210,10 @@ public class CartRegisterManager {
 				// 좌석정보변환하기
 				String changeSeat = changeSeat(seat);
 				TicketWorldMain.performanceInfoList.get(numId).setPerformance_seatsInfo(changeSeat);
+				// 예매 후 공연 정보 수정
+				PerformanceRegisterManager.performanceUpdateAfterTicketing(numId);
+				// 공연정보 로딩
+				PerformanceRegisterManager.performanceList();
 				// 카트에 저장
 				cartRegister(numId, seatNumber);
 			}
@@ -265,18 +271,19 @@ public class CartRegisterManager {
 	// 좌석가져오기
 	public static int[][] getPerformanceSeats(int numId) {
 		int totalSeats = TicketWorldMain.performanceInfoList.get(numId).getPerformance_total_seats();
-		int rowNum = totalSeats / COLUMN_NUM + 1;
+		int rowNum = totalSeats / COLUMN_NUM;
 		int remain = totalSeats % COLUMN_NUM;
-		int[][] seat = new int[rowNum][COLUMN_NUM];
+		int[][] seat = null;
 
 		String[] seatArr = TicketWorldMain.performanceInfoList.get(numId).getPerformance_seatsInfo().split("");
 
 		if (remain != 0) {
 			// 남은 좌석 있을 때
+			seat = new int[rowNum+1][COLUMN_NUM];
 			for (int i = 0; i < seat.length; i++) {
-				if (i == rowNum - 1) {
+				if (i == rowNum) {
 					for (int j = 0; j < COLUMN_NUM - remain; j++) {
-						seat[rowNum - 1][COLUMN_NUM - 1 - j] = N_SEAT;
+						seat[rowNum][COLUMN_NUM - 1 - j] = N_SEAT;
 					}
 				} else {
 					for (int j = 0; j < seat[i].length; j++) {
@@ -286,6 +293,7 @@ public class CartRegisterManager {
 			}
 		} else {
 			// 남은 좌석 없을 때
+			seat = new int[rowNum][COLUMN_NUM];
 			for (int i = 0; i < seat.length; i++) {
 				for (int j = 0; j < seat[i].length; j++) {
 					seat[i][j] = Integer.parseInt(seatArr[(i * COLUMN_NUM) + j]);

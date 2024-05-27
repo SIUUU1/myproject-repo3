@@ -37,12 +37,29 @@ public class PaymentVO implements Serializable {
 		this.total_payment_amount = total_payment_amount;
 	}
 
-	public PaymentVO(String customer_id, int performance_id, String reservation_date, String recipient_name,
+	public PaymentVO(String customer_id, int performance_id, String performance_name, String recipient_name,
 			String recipient_phone, String recipient_address, String reservation_seats, int total_reservation_seats,
 			int total_payment_amount) {
 		super();
 		this.customer_id = customer_id;
 		this.performance_id = performance_id;
+		this.performance_name = performance_name;
+		this.recipient_name = recipient_name;
+		this.recipient_phone = recipient_phone;
+		this.recipient_address = recipient_address;
+		this.reservation_seats = reservation_seats;
+		this.total_reservation_seats = total_reservation_seats;
+		this.total_payment_amount = total_payment_amount;
+	}
+
+	public PaymentVO(int payment_id, String customer_id, int performance_id, String performance_name,
+			String reservation_date, String recipient_name, String recipient_phone, String recipient_address,
+			String reservation_seats, int total_reservation_seats, int total_payment_amount) {
+		super();
+		this.payment_id = payment_id;
+		this.customer_id = customer_id;
+		this.performance_id = performance_id;
+		this.performance_name = performance_name;
 		this.reservation_date = reservation_date;
 		this.recipient_name = recipient_name;
 		this.recipient_phone = recipient_phone;

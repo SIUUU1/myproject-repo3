@@ -48,7 +48,7 @@ public class CartVO implements Serializable {
 		this.total_reservation_seats = total_reservation_seats;
 		this.total_payment_amount = total_payment_amount;
 	}
-
+	
 	// memberFunction
 	public int getCart_id() {
 		return cart_id;

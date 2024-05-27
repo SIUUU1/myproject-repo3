@@ -42,19 +42,7 @@ public class CustomerDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (rs != null) {
-					rs.close();
-				}
-				if (pstmt != null) {
-					pstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, pstmt, rs);
 		}
 	}
 
@@ -62,7 +50,7 @@ public class CustomerDAO {
 	public static int getCustomer_Count() {
 		Connection con = null;
 		CallableStatement cstmt = null;
-		int count=0;
+		int count = 0;
 		try {
 			con = DBUtil.makeConnection();
 			cstmt = con.prepareCall("{CALL CUS_COUNT_PROC(?)}");
@@ -72,16 +60,7 @@ public class CustomerDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 		return count;
 	}
@@ -92,7 +71,7 @@ public class CustomerDAO {
 		CallableStatement cstmt = null;
 		try {
 			con = DBUtil.makeConnection();
-			cstmt = con.prepareCall("{CALL CUS_UPDATE_PROC(?,?,?,?,?,?,?,?,?,?,?,?)}");
+			cstmt = con.prepareCall("{CALL CUS_UPDATE_PROC(?,?,?,?,?,?,?,?,?,?,?,?,?)}");
 			cstmt.setString(1, cvo.getCustomer_grade());
 			cstmt.setString(2, cvo.getCustomer_pw());
 			cstmt.setString(3, cvo.getCustomer_name());
@@ -105,8 +84,10 @@ public class CustomerDAO {
 			cstmt.setDouble(10, cvo.getCustomer_point_ratio());
 			cstmt.setDouble(11, cvo.getCustomer_sale_ratio());
 			cstmt.setString(12, cvo.getCustomer_id());
-			int value = cstmt.executeUpdate();
-			if (value == 1) {
+			cstmt.registerOutParameter(13, Types.INTEGER);
+			cstmt.executeUpdate();
+			int value = cstmt.getInt(13);
+			if (value == 0) {
 				System.out.println(cvo.getCustomer_name() + " 회원정보 수정 성공");
 			} else {
 				System.out.println(cvo.getCustomer_name() + " 회원정보 수정 실패");
@@ -114,16 +95,7 @@ public class CustomerDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 	}
 
@@ -133,10 +105,12 @@ public class CustomerDAO {
 		CallableStatement cstmt = null;
 		try {
 			con = DBUtil.makeConnection();
-			cstmt = con.prepareCall("{CALL CUS_DELETE_PROC(?)}");
+			cstmt = con.prepareCall("{CALL CUS_DELETE_PROC(?,?)}");
 			cstmt.setString(1, c_id);
-			int value = cstmt.executeUpdate();
-			if (value == 1) {
+			cstmt.registerOutParameter(2, Types.INTEGER);
+			cstmt.executeUpdate();
+			int value = cstmt.getInt(2);
+			if (value == 0) {
 				System.out.println(c_id + " 회원 삭제 성공");
 			} else {
 				System.out.println(c_id + " 회원 삭제 실패");
@@ -144,16 +118,7 @@ public class CustomerDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 	}
 
@@ -163,7 +128,7 @@ public class CustomerDAO {
 		CallableStatement cstmt = null;
 		try {
 			con = DBUtil.makeConnection();
-			cstmt = con.prepareCall("{CALL CUS_INSERT_PROC(?,?,?,?,?,?,?)}");
+			cstmt = con.prepareCall("{CALL CUS_INSERT_PROC(?,?,?,?,?,?,?,?)}");
 			cstmt.setString(1, cvo.getCustomer_id());
 			cstmt.setString(2, cvo.getCustomer_pw());
 			cstmt.setString(3, cvo.getCustomer_name());
@@ -171,8 +136,10 @@ public class CustomerDAO {
 			cstmt.setString(5, cvo.getCustomer_email());
 			cstmt.setString(6, cvo.getCustomer_address());
 			cstmt.setInt(7, cvo.getCustomer_age());
-			int value = cstmt.executeUpdate();
-			if (value == 1) {
+			cstmt.registerOutParameter(8, Types.INTEGER);
+			cstmt.executeUpdate();
+			int value = cstmt.getInt(8);
+			if (value == 0) {
 				System.out.println(cvo.getCustomer_name() + " 회원가입 성공하셨습니다.");
 			} else {
 				System.out.println(cvo.getCustomer_name() + "회원가입 실패하셨습니다.");
@@ -180,16 +147,7 @@ public class CustomerDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 	}
 
@@ -230,16 +188,7 @@ public class CustomerDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (pstmt != null) {
-					pstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, pstmt);
 		}
 		return cvo;
 	}
@@ -265,16 +214,7 @@ public class CustomerDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (pstmt != null) {
-					pstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, pstmt);
 		}
 		return customer_id;
 	}
@@ -285,11 +225,13 @@ public class CustomerDAO {
 		CallableStatement cstmt = null;
 		try {
 			con = DBUtil.makeConnection();
-			cstmt = con.prepareCall("{CALL RESET_PW_PROC(?,?)}");
+			cstmt = con.prepareCall("{CALL RESET_PW_PROC(?,?,?)}");
 			cstmt.setString(1, reset_pw);
 			cstmt.setString(2, customer_id);
-			int value = cstmt.executeUpdate();
-			if (value == 1) {
+			cstmt.registerOutParameter(3, Types.INTEGER);
+			cstmt.executeUpdate();
+			int value = cstmt.getInt(3);
+			if (value == 0) {
 				System.out.println("비밀번호가 성공적으로 재설정되었습니다.");
 			} else {
 				System.out.println("비밀번호 재설정에 실패하셨습니다.");
@@ -297,16 +239,32 @@ public class CustomerDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
+	}
+
+	// 아이디 중복 막기
+	public boolean preventOverlapId(String c_id) {
+		boolean flag = false;
+		Connection con = null;
+		CallableStatement cstmt = null;
+		try {
+			con = DBUtil.makeConnection();
+			cstmt = con.prepareCall("{CALL PREVENT_OVERLAP_ID_PROC(?,?)}");
+			cstmt.setString(1, c_id);
+			cstmt.registerOutParameter(2, Types.INTEGER);
+			cstmt.executeUpdate();
+			int count = cstmt.getInt(2);
+ 			if (count == 0) {
+				flag = true;
+			} else {
+				System.out.println("중복된 아이디입니다.");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			DBUtil.closeResources(con, cstmt);
+		}
+		return flag;
 	}
 }

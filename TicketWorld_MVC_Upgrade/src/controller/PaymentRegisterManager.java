@@ -64,9 +64,10 @@ public class PaymentRegisterManager {
 		int total_payment_amount = totalPayment;
 		for (int i = 0; i < cartList.size(); i++) {
 			int performance_id = cartList.get(i).getPerformance_id();
+			String performance_name = cartList.get(i).getPerformance_name();
 			String reservation_seats = cartList.get(i).getReservation_seats();
 			int total_reservation_seats = cartList.get(i).getTotal_reservation_seats();
-			payvo = new PaymentVO(customer_id, performance_id, recipient_name, recipient_phone, recipient_address,
+			payvo = new PaymentVO(customer_id, performance_id, performance_name, recipient_name, recipient_phone, recipient_address,
 					reservation_seats, total_reservation_seats, total_payment_amount);
 			paydao.setPaymentRegister(payvo);
 		}
@@ -83,9 +84,10 @@ public class PaymentRegisterManager {
 		int total_payment_amount = totalPayment;
 		for (int i = 0; i < cartList.size(); i++) {
 			int performance_id = cartList.get(i).getPerformance_id();
+			String performance_name = cartList.get(i).getPerformance_name();
 			String reservation_seats = cartList.get(i).getReservation_seats();
 			int total_reservation_seats = cartList.get(i).getTotal_reservation_seats();
-			payvo = new PaymentVO(customer_id, performance_id, recipient_name, recipient_phone, recipient_address,
+			payvo = new PaymentVO(customer_id, performance_id,performance_name, recipient_name, recipient_phone, recipient_address,
 					reservation_seats, total_reservation_seats, total_payment_amount);
 			paydao.setPaymentRegister(payvo);
 		}

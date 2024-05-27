@@ -20,12 +20,14 @@ public class CartDAO {
 		CallableStatement cstmt = null;
 		try {
 			con = DBUtil.makeConnection();
-			cstmt = con.prepareCall("{CALL CART_INSERT_PROC(?,?,?)}");
+			cstmt = con.prepareCall("{CALL CART_INSERT_PROC(?,?,?,?)}");
 			cstmt.setString(1, cartvo.getCustomer_id());
 			cstmt.setInt(2, cartvo.getPerformance_id());
 			cstmt.setString(3, cartvo.getReservation_seats());
-			int value = cstmt.executeUpdate();
-			if (value == 1) {
+			cstmt.registerOutParameter(4, Types.INTEGER);
+			cstmt.executeUpdate();
+			int value = cstmt.getInt(4);
+			if (value == 0) {
 				System.out.println(cartvo.getCustomer_id() + " 장바구니 등록 성공");
 			} else {
 				System.out.println(cartvo.getCustomer_id() + " 장바구니 등록 실패");
@@ -33,16 +35,7 @@ public class CartDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 	}
 
@@ -51,51 +44,42 @@ public class CartDAO {
 		ArrayList<CartVO> cartList = new ArrayList<CartVO>();
 		Connection con = null;
 		CallableStatement cstmt = null;
-		ResultSet rs = null;
+		ResultSet rs1 = null;
+		ResultSet rs2 = null;
 		try {
 			con = DBUtil.makeConnection();
-			cstmt = con.prepareCall("{CALL CART_PRINT_PROC(?,?)}");
+			cstmt = con.prepareCall("{CALL CART_PRINT_PROC3(?,?,?)}");
 			cstmt.setString(1, TicketWorldMain.customer.getCustomer_id());
 			cstmt.registerOutParameter(2, OracleTypes.CURSOR);
+			cstmt.registerOutParameter(3, OracleTypes.CURSOR);
 			cstmt.executeQuery();
-			rs = (ResultSet) cstmt.getObject(2);
+			rs1 = (ResultSet) cstmt.getObject(2);
+			rs2 = (ResultSet) cstmt.getObject(3);
 			System.out.println("================================================================");
 			System.out.println(" \t\t\t " + "내 장바구니");
 			System.out.println("================================================================");
 			System.out.println(" 공연ID | 공연명 | 공연일 | 예매좌석 | 총예매수 | 총결제금액 ");
 			System.out.println("================================================================");
-			while (rs.next()) {
-				CartVO cartvo = new CartVO();
-				cartvo.setCart_id(rs.getInt("cart_id"));
-				cartvo.setCustomer_id(rs.getString("customer_id"));
-				cartvo.setPerformance_id(rs.getInt("performance_id"));
-				cartvo.setPerformance_name(rs.getString("performance_name"));
-				cartvo.setReservation_seats(rs.getString("reservation_seats"));
-				cartvo.setTotal_reservation_seats(rs.getInt("total_reservation_seats"));
-				cartvo.setTotal_payment_amount(rs.getInt("total_payment_amount"));
-				cartList.add(cartvo);
+			while (rs1.next() && rs2.next()) {
+				CartVO cart = new CartVO();
+				cart.setCustomer_id(rs1.getString("customer_id"));
+				cart.setPerformance_id(rs1.getInt("performance_id"));
+				cart.setPerformance_name(rs1.getString("performance_name"));
+				cart.setReservation_seats(rs1.getString("reservation_seats"));
+				cart.setTotal_reservation_seats(rs1.getInt("total_reservation_seats"));
+				cart.setTotal_payment_amount(rs1.getInt("total_payment_amount"));
+				cartList.add(cart);
 
-				System.out.println(" " + rs.getInt("performance_id") + " | " + rs.getString("performance_name") + " | "
-						+ String.valueOf(rs.getDate("performance_day")) + " | " + rs.getString("reservation_seats")
-						+ "| " + rs.getInt("total_reservation_seats") + " | " + rs.getInt("total_payment_amount"));
+				System.out.println(" " + rs1.getInt("performance_id") + " | " + rs1.getString("performance_name")
+						+ " | " + String.valueOf(rs2.getDate("performance_day")) + " | "
+						+ rs1.getString("reservation_seats") + " | " + rs1.getInt("total_reservation_seats") + " | "
+						+ rs1.getInt("total_payment_amount"));
 			}
 			System.out.println("================================================================");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (rs != null) {
-					rs.close();
-				}
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt, rs1, rs2);
 		}
 		return cartList;
 	}
@@ -111,20 +95,11 @@ public class CartDAO {
 			cstmt.setString(1, TicketWorldMain.customer.getCustomer_id());
 			cstmt.registerOutParameter(2, Types.INTEGER);
 			cstmt.executeUpdate();
-			count = cstmt.getInt(1);
+			count = cstmt.getInt(2);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 		return count;
 	}
@@ -135,10 +110,12 @@ public class CartDAO {
 		CallableStatement cstmt = null;
 		try {
 			con = DBUtil.makeConnection();
-			cstmt = con.prepareCall("{CALL CART_CLEAR_PROC(?)}");
+			cstmt = con.prepareCall("{CALL CART_CLEAR_PROC(?,?)}");
 			cstmt.setString(1, customer_id);
-			int value = cstmt.executeUpdate();
-			if (value != 0) {
+			cstmt.registerOutParameter(2, Types.INTEGER);
+			cstmt.executeUpdate();
+			int value = cstmt.getInt(2);
+			if (value == 0) {
 				System.out.println(customer_id + " 장바구니 비우기 성공");
 			} else {
 				System.out.println(customer_id + " 장바구니 비우기 실패");
@@ -146,16 +123,7 @@ public class CartDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 	}
 
@@ -165,11 +133,13 @@ public class CartDAO {
 		CallableStatement cstmt = null;
 		try {
 			con = DBUtil.makeConnection();
-			cstmt = con.prepareCall("{CALL CART_DELETE_PROC(?,?)}");
+			cstmt = con.prepareCall("{CALL CART_DELETE_PROC(?,?,?)}");
 			cstmt.setString(1, customer_id);
 			cstmt.setInt(2, p_id);
-			int value = cstmt.executeUpdate();
-			if (value == 1) {
+			cstmt.registerOutParameter(3, Types.INTEGER);
+			cstmt.executeUpdate();
+			int value = cstmt.getInt(3);
+			if (value == 0) {
 				System.out.println(p_id + "번 공연 예매 삭제 성공");
 			} else {
 				System.out.println(p_id + "번 공연 예매 삭제 성공");
@@ -177,16 +147,7 @@ public class CartDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 	}
 

@@ -39,19 +39,7 @@ public class PerformanceDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (rs != null) {
-					rs.close();
-				}
-				if (pstmt != null) {
-					pstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, pstmt, rs);
 		}
 		return performanceList;
 	}
@@ -70,16 +58,7 @@ public class PerformanceDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 		return count;
 	}
@@ -95,7 +74,7 @@ public class PerformanceDAO {
 		Connection con = null;
 		try {
 			con = DBUtil.makeConnection();
-			cstmt = con.prepareCall("{CALL PER_INSERT_PROC(?,?,?,?,?,?,?,?)}");
+			cstmt = con.prepareCall("{CALL PER_INSERT_PROC(?,?,?,?,?,?,?,?,?)}");
 			cstmt.setString(1, pvo.getPerformance_name());
 			cstmt.setString(2, pvo.getPerformance_genre());
 			cstmt.setString(3, pvo.getPerformance_day());
@@ -104,8 +83,10 @@ public class PerformanceDAO {
 			cstmt.setInt(6, pvo.getPerformance_total_seats());
 			cstmt.setString(7, sb.toString());
 			cstmt.setInt(8, pvo.getPerformance_ticket_price());
-			int value = cstmt.executeUpdate();
-			if (value == 1) {
+			cstmt.registerOutParameter(9, Types.INTEGER);
+			cstmt.executeUpdate();
+			int value = cstmt.getInt(9);
+			if (value == 0) {
 				System.out.println(pvo.getPerformance_name() + " 공연 등록 성공");
 			} else {
 				System.out.println(pvo.getPerformance_name() + " 공연 등록 실패");
@@ -113,16 +94,7 @@ public class PerformanceDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 	}
 
@@ -137,7 +109,7 @@ public class PerformanceDAO {
 		CallableStatement cstmt = null;
 		try {
 			con = DBUtil.makeConnection();
-			cstmt = con.prepareCall("{CALL PER_UPDATE_PROC(?,?,?,?,?,?,?,?,?,?)}");
+			cstmt = con.prepareCall("{CALL PER_UPDATE_PROC(?,?,?,?,?,?,?,?,?,?,?)}");
 			cstmt.setString(1, pvo.getPerformance_name());
 			cstmt.setString(2, pvo.getPerformance_genre());
 			cstmt.setString(3, pvo.getPerformance_day());
@@ -148,8 +120,10 @@ public class PerformanceDAO {
 			cstmt.setString(8, sb.toString());
 			cstmt.setInt(9, pvo.getPerformance_ticket_price());
 			cstmt.setInt(10, pvo.getPerformance_id());
-			int value = cstmt.executeUpdate();
-			if (value == 1) {
+			cstmt.registerOutParameter(11, Types.INTEGER);
+			cstmt.executeUpdate();
+			int value = cstmt.getInt(11);
+			if (value == 0) {
 				System.out.println(pvo.getPerformance_name() + " 공연정보 수정 성공");
 			} else {
 				System.out.println(pvo.getPerformance_name() + " 공연정보 수정 실패");
@@ -157,16 +131,7 @@ public class PerformanceDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 	}
 
@@ -176,10 +141,12 @@ public class PerformanceDAO {
 		CallableStatement cstmt = null;
 		try {
 			con = DBUtil.makeConnection();
-			cstmt = con.prepareCall("{CALL PER_DELTE_PROC(?)}");
+			cstmt = con.prepareCall("{CALL PER_DELTE_PROC(?,?)}");
 			cstmt.setInt(1, p_id);
-			int value = cstmt.executeUpdate();
-			if (value == 1) {
+			cstmt.registerOutParameter(2, Types.INTEGER);
+			cstmt.executeUpdate();
+			int value = cstmt.getInt(2);
+			if (value == 0) {
 				System.out.println(p_id + " 공연 삭제 성공");
 			} else {
 				System.out.println(p_id + " 공연 삭제 실패");
@@ -187,32 +154,24 @@ public class PerformanceDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (cstmt != null) {
-					cstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 	}
 
 	// 예매 후 공연 정보 수정함수
 	public void setPerformanceUpdateAfterTicketing(PerformanceVO pvo) {
-		String sql = "update performances set performance_sold_seats=?, performance_seatsinfo=? where performance_id = ?";
 		Connection con = null;
-		PreparedStatement pstmt = null;
+		CallableStatement cstmt = null;
 		try {
 			con = DBUtil.makeConnection();
-			pstmt = con.prepareStatement(sql);
-			pstmt.setInt(1, pvo.getPerformance_sold_seats());
-			pstmt.setString(2, pvo.getPerformance_seatsInfo());
-			pstmt.setInt(3, pvo.getPerformance_id());
-			int value = pstmt.executeUpdate();
-			if (value == 1) {
+			cstmt = con.prepareCall("{CALL PER_UPDATE_TICKEING_PROC(?,?,?,?)}");
+			cstmt.setInt(1, pvo.getPerformance_sold_seats());
+			cstmt.setString(2, pvo.getPerformance_seatsInfo());
+			cstmt.setInt(3, pvo.getPerformance_id());
+			cstmt.registerOutParameter(4, Types.INTEGER);
+			cstmt.executeUpdate();
+			int value = cstmt.getInt(4);
+			if (value == 0) {
 				// System.out.println(pvo.getPerformance_name() + "예매 후 공연정보 수정 성공");
 			} else {
 				// System.out.println(pvo.getPerformance_name() + "예매 후 공연정보 수정 실패");
@@ -220,16 +179,7 @@ public class PerformanceDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if (pstmt != null) {
-					pstmt.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DBUtil.closeResources(con, cstmt);
 		}
 	}
 }

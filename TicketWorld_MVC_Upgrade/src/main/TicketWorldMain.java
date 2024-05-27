@@ -88,8 +88,6 @@ public class TicketWorldMain {
 
 		// Customer Main
 		if (loginFlag) {
-			int Paymentcount = PaymentDAO.getPayment_Count();
-			int PaymentBackCount = PaymentDAO.getPaymentBack_Count();
 			System.out.println();
 			System.out.println(customer.getCustomer_name() + "님 환영합니다.");
 			while (!mainExitFlag) {
@@ -121,6 +119,8 @@ public class TicketWorldMain {
 							cartMenu();
 							break;
 						case CUSTOMER_CHOICE.PAYMENT:
+							int Paymentcount = PaymentDAO.getPayment_Count();
+							int PaymentBackCount = PaymentDAO.getPaymentBack_Count();
 							// 결제 내역 출력
 							if (Paymentcount != 0) {
 								PaymentRegisterManager.printPaymentList(customer.getCustomer_id());
@@ -330,6 +330,7 @@ public class TicketWorldMain {
 						if (findFlag) {
 							// 공연예매
 							CartRegisterManager.ticketing(performanceInfoList);
+							exitFlag = true;
 						}
 						break;
 					case SELECT_GENRE_CHOICE.CONCERT:
@@ -338,6 +339,7 @@ public class TicketWorldMain {
 						if (findFlag) {
 							// 공연예매
 							CartRegisterManager.ticketing(performanceInfoList);
+							exitFlag = true;
 						}
 						break;
 					case SELECT_GENRE_CHOICE.PLAY:
@@ -346,6 +348,7 @@ public class TicketWorldMain {
 						if (findFlag) {
 							// 공연예매
 							CartRegisterManager.ticketing(performanceInfoList);
+							exitFlag = true;
 						}
 						break;
 					case SELECT_GENRE_CHOICE.CLASSIC:
@@ -354,6 +357,7 @@ public class TicketWorldMain {
 						if (findFlag) {
 							// 공연예매
 							CartRegisterManager.ticketing(performanceInfoList);
+							exitFlag = true;
 						}
 						break;
 					case SELECT_GENRE_CHOICE.DANCE:
@@ -362,6 +366,7 @@ public class TicketWorldMain {
 						if (findFlag) {
 							// 공연예매
 							CartRegisterManager.ticketing(performanceInfoList);
+							exitFlag = true;
 						}
 						break;
 					case SELECT_GENRE_CHOICE.EXTRA:
@@ -370,6 +375,7 @@ public class TicketWorldMain {
 						if (findFlag) {
 							// 공연예매
 							CartRegisterManager.ticketing(performanceInfoList);
+							exitFlag = true;
 						}
 						break;
 					case SELECT_GENRE_CHOICE.BACK:

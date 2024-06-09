@@ -10,12 +10,14 @@ import java.util.ArrayList;
 
 import main.TicketWorldMain;
 import model.PaymentVO;
+import oracle.jdbc.OracleTypes;
 
 public class PaymentDAO {
 	// 결제내역 저장기능구현
-	public void setPaymentRegister(PaymentVO payvo) {
+	public int setPaymentRegister(PaymentVO payvo) {
 		Connection con = null;
 		CallableStatement cstmt = null;
+		int payment_id = -1;
 		try {
 			con = DBUtil.makeConnection();
 			cstmt = con.prepareCall("{CALL PAY_INSERT_PROC(?,?,?,?,?,?,?,?,?,?)}");
@@ -30,8 +32,8 @@ public class PaymentDAO {
 			cstmt.setInt(9, payvo.getTotal_payment_amount());
 			cstmt.registerOutParameter(10, Types.INTEGER);
 			cstmt.executeUpdate();
-			int value = cstmt.getInt(10);
-			if (value == 0) {
+			payment_id = cstmt.getInt(10);
+			if (payment_id != -1) {
 				System.out.println("결제내역 등록 성공");
 			} else {
 				System.out.println("결제내역 등록 실패");
@@ -41,20 +43,22 @@ public class PaymentDAO {
 		} finally {
 			DBUtil.closeResources(con, cstmt);
 		}
+		return payment_id;
 	}
 
 	// 결제내역출력함수
 	public void getPaymentList(String cus_id) {
 		ArrayList<PaymentVO> payList = new ArrayList<>();
-		String sql = "select * from payment where customer_id=? order by reservation_date desc";
 		Connection con = null;
-		PreparedStatement pstmt = null;
+		CallableStatement cstmt = null;
 		ResultSet rs = null;
 		try {
 			con = DBUtil.makeConnection();
-			pstmt = con.prepareStatement(sql);
-			pstmt.setString(1, cus_id);
-			rs = pstmt.executeQuery();
+			cstmt = con.prepareCall("{CALL PAYMENT_PRINT_PROC(?,?)}");
+			cstmt.setString(1, cus_id);
+			cstmt.registerOutParameter(2, OracleTypes.CURSOR);
+			cstmt.executeQuery();
+			rs = (ResultSet) cstmt.getObject(2);
 			while (rs.next()) {
 				PaymentVO payvo = new PaymentVO();
 				payvo.setPayment_id(rs.getInt("payment_id"));
@@ -69,24 +73,24 @@ public class PaymentDAO {
 				payvo.setTotal_payment_amount(rs.getInt("total_payment_amount"));
 
 				System.out.println("==========================  결제  내역  ==========================");
-				System.out.println(
-						" 고객명 : " + rs.getString("recipient_name") + "   \t\t연락처 : " + rs.getString("recipient_phone"));
-				System.out.println(" 배송지 : " + rs.getString("recipient_address") + "\t\t예매날짜 : "
-						+ String.valueOf(rs.getDate("reservation_date")));
+				System.out.printf(" 고객명 : %-30s 연락처 : %s \n", rs.getString("recipient_name"),
+						rs.getString("recipient_phone"));
+				System.out.printf(" 배송지 : %-30s 예매날짜 : %s \n", rs.getString("recipient_address"),
+						String.valueOf(rs.getDate("reservation_date")));
+ 				System.out.println("----------------------------------------------------------------");
+				System.out.printf(" 공연ID : %-30d 공연명 : %s \n", rs.getInt("performance_id"),
+						rs.getString("performance_name"));
+				System.out.printf(" 예매좌석 : %-30s 총예매수 : %s \n", rs.getString("reservation_seats"),
+						rs.getInt("total_reservation_seats"));
 				System.out.println("----------------------------------------------------------------");
-				System.out.println(
-						" 공연ID : " + rs.getInt("performance_id") + "\t\t공연명 : " + rs.getString("performance_name"));
-				System.out.println(" 예매좌석 : " + rs.getString("reservation_seats") + "\t총예매수 : "
-						+ rs.getInt("total_reservation_seats"));
-				System.out.println("----------------------------------------------------------------");
-				System.out.println("\t\t   총 결제금액 : " + rs.getInt("total_payment_amount"));
+				System.out.printf(" %-25s 총 결제금액 : %s\n"," ",rs.getInt("total_payment_amount"));
 				System.out.println("================================================================");
 				payList.add(payvo);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			DBUtil.closeResources(con, pstmt, rs);
+			DBUtil.closeResources(con, cstmt, rs);
 		}
 	}
 
@@ -131,68 +135,70 @@ public class PaymentDAO {
 	}
 
 	// 현재 결제 내역 출력
-	public void getPayment(PaymentVO payvo) {
-		String sql = "select * from payment where payment_id=?";
+	public void getPayment(int payment_id) {
 		Connection con = null;
-		PreparedStatement pstmt = null;
+		CallableStatement cstmt = null;
 		ResultSet rs = null;
 		try {
 			con = DBUtil.makeConnection();
-			pstmt = con.prepareStatement(sql);
-			pstmt.setInt(1, payvo.getPayment_id());
-			rs = pstmt.executeQuery();
+			cstmt = con.prepareCall("{CALL CPAY_PRINT_PROC(?,?)}");
+			cstmt.setInt(1, payment_id);
+			cstmt.registerOutParameter(2, OracleTypes.CURSOR);
+			cstmt.executeQuery();
+			rs = (ResultSet) cstmt.getObject(2);
 			while (rs.next()) {
 				System.out.println("==========================  결제  내역  ==========================");
-				System.out.println(
-						" 고객명 : " + rs.getString("recipient_name") + "   \t\t연락처 : " + rs.getString("recipient_phone"));
-				System.out.println(" 배송지 : " + rs.getString("recipient_address") + "\t\t예매날짜 : "
-						+ String.valueOf(rs.getDate("reservation_date")));
+				System.out.printf(" 고객명 : %-30s 연락처 : %s \n", rs.getString("recipient_name"),
+						rs.getString("recipient_phone"));
+				System.out.printf(" 배송지 : %-30s 예매날짜 : %s \n", rs.getString("recipient_address"),
+						String.valueOf(rs.getDate("reservation_date")));
+ 				System.out.println("----------------------------------------------------------------");
+				System.out.printf(" 공연ID : %-30d 공연명 : %s \n", rs.getInt("performance_id"),
+						rs.getString("performance_name"));
+				System.out.printf(" 예매좌석 : %-30s 총예매수 : %s \n", rs.getString("reservation_seats"),
+						rs.getInt("total_reservation_seats"));
 				System.out.println("----------------------------------------------------------------");
-				System.out.println(
-						" 공연ID : " + rs.getInt("performance_id") + "\t\t공연명 : " + rs.getString("performance_name"));
-				System.out.println(" 예매좌석 : " + rs.getString("reservation_seats") + "\t총예매수 : "
-						+ rs.getInt("total_reservation_seats"));
-				System.out.println("----------------------------------------------------------------");
-				System.out.println("\t\t   총 결제금액 : " + rs.getInt("total_payment_amount"));
+				System.out.printf(" %-25s 총 결제금액 : %s\n"," ",rs.getInt("total_payment_amount"));
 				System.out.println("================================================================");
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			DBUtil.closeResources(con, pstmt, rs);
+			DBUtil.closeResources(con, cstmt, rs);
 		}
 	}
-
+	
 	// 백업테이블에서 결제 내역 출력
 	public void getPaymentBackList(String cus_id) {
-		String sql = "select * from PAYMENT_BACK where customer_id=? order by reservation_date desc";
 		Connection con = null;
-		PreparedStatement pstmt = null;
+		CallableStatement cstmt = null;
 		ResultSet rs = null;
 		try {
 			con = DBUtil.makeConnection();
-			pstmt = con.prepareStatement(sql);
-			pstmt.setString(1, cus_id);
-			rs = pstmt.executeQuery();
+			cstmt = con.prepareCall("{CALL BPAY_PRINT_PROC(?,?)}");
+			cstmt.setString(1, cus_id);
+			cstmt.registerOutParameter(2, OracleTypes.CURSOR);
+			cstmt.executeQuery();
+			rs = (ResultSet) cstmt.getObject(2);
 			while (rs.next()) {
 				System.out.println("==========================  결제  내역  ==========================");
-				System.out.println(
-						" 고객명 : " + rs.getString("recipient_name") + "   \t\t연락처 : " + rs.getString("recipient_phone"));
-				System.out.println(" 배송지 : " + rs.getString("recipient_address") + "\t\t예매날짜 : "
-						+ String.valueOf(rs.getDate("reservation_date")));
+				System.out.printf(" 고객명 : %-30s 연락처 : %s \n", rs.getString("recipient_name"),
+						rs.getString("recipient_phone"));
+				System.out.printf(" 배송지 : %-30s 예매날짜 : %s \n", rs.getString("recipient_address"),
+						String.valueOf(rs.getDate("reservation_date")));
+ 				System.out.println("----------------------------------------------------------------");
+				System.out.printf(" 공연ID : %-30d 공연명 : %s \n", rs.getInt("performance_id"),
+						rs.getString("performance_name"));
+				System.out.printf(" 예매좌석 : %-30s 총예매수 : %s \n", rs.getString("reservation_seats"),
+						rs.getInt("total_reservation_seats"));
 				System.out.println("----------------------------------------------------------------");
-				System.out.println(
-						" 공연ID : " + rs.getInt("performance_id") + "\t\t공연명 : " + rs.getString("performance_name"));
-				System.out.println(" 예매좌석 : " + rs.getString("reservation_seats") + "\t총예매수 : "
-						+ rs.getInt("total_reservation_seats"));
-				System.out.println("----------------------------------------------------------------");
-				System.out.println("\t\t   총 결제금액 : " + rs.getInt("total_payment_amount"));
+				System.out.printf(" %-25s 총 결제금액 : %s\n"," ",rs.getInt("total_payment_amount"));
 				System.out.println("================================================================");
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			DBUtil.closeResources(con, pstmt, rs);
+			DBUtil.closeResources(con, cstmt, rs);
 		}
 	}
 }

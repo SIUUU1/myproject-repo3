@@ -58,7 +58,7 @@ public class CartDAO {
 			System.out.println("================================================================");
 			System.out.println(" \t\t\t " + "내 장바구니");
 			System.out.println("================================================================");
-			System.out.println(" 공연ID | 공연명 | 공연일 | 예매좌석 | 총예매수 | 총결제금액 ");
+			System.out.println(" 공연ID  공연명         공연일         예매좌석        총예매수   총결제금액  ");
 			System.out.println("================================================================");
 			while (rs1.next() && rs2.next()) {
 				CartVO cart = new CartVO();
@@ -69,11 +69,9 @@ public class CartDAO {
 				cart.setTotal_reservation_seats(rs1.getInt("total_reservation_seats"));
 				cart.setTotal_payment_amount(rs1.getInt("total_payment_amount"));
 				cartList.add(cart);
-
-				System.out.println(" " + rs1.getInt("performance_id") + " | " + rs1.getString("performance_name")
-						+ " | " + String.valueOf(rs2.getDate("performance_day")) + " | "
-						+ rs1.getString("reservation_seats") + " | " + rs1.getInt("total_reservation_seats") + " | "
-						+ rs1.getInt("total_payment_amount"));
+				System.out.printf(" %-4s  %-10s  %-10s  %-10s  %-4d  %-6d\n", rs1.getInt("performance_id"), rs1.getString("performance_name"),
+						String.valueOf(rs2.getDate("performance_day")), rs1.getString("reservation_seats"),
+						rs1.getInt("total_reservation_seats"), rs1.getInt("total_payment_amount"));
 			}
 			System.out.println("================================================================");
 		} catch (SQLException e) {

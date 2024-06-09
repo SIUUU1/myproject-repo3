@@ -9,19 +9,21 @@ import java.sql.Types;
 import java.util.ArrayList;
 
 import model.PerformanceVO;
+import oracle.jdbc.OracleTypes;
 
 public class PerformanceDAO {
 	// 공연목록리스트함수
 	public ArrayList<PerformanceVO> getPerformanceTotalList() {
 		ArrayList<PerformanceVO> performanceList = new ArrayList<PerformanceVO>();
-		String sql = "select * from performances order by performance_id";
 		Connection con = null;
-		PreparedStatement pstmt = null;
+		CallableStatement cstmt = null;
 		ResultSet rs = null;
 		try {
 			con = DBUtil.makeConnection();
-			pstmt = con.prepareStatement(sql);
-			rs = pstmt.executeQuery();
+			cstmt = con.prepareCall("{CALL PERFORMANCES_PRINT_PROC(?)}");
+			cstmt.registerOutParameter(1, OracleTypes.CURSOR);
+			cstmt.executeQuery();
+			rs = (ResultSet) cstmt.getObject(1);
 			while (rs.next()) {
 				PerformanceVO pvo = new PerformanceVO();
 				pvo.setPerformance_id(rs.getInt("performance_id"));
@@ -39,7 +41,7 @@ public class PerformanceDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			DBUtil.closeResources(con, pstmt, rs);
+			DBUtil.closeResources(con, cstmt, rs);
 		}
 		return performanceList;
 	}

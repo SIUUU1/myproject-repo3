@@ -67,9 +67,9 @@ public class CustomerRegisterManager {
 	// 고객 로그인 기능 구현
 	public static CustomerVO logIn() {
 		CustomerVO cvo = null;
-		System.out.print("아이디를 입력하세요 ");
+		System.out.print("아이디를 입력하세요. ");
 		String login_id = sc.nextLine();
-		System.out.print("비밀번호를 입력하세요 ");
+		System.out.print("비밀번호를 입력하세요. ");
 		String login_pw = sc.nextLine();
 		cvo = cdao.loginCustomerRegister(login_id, login_pw);
 		return cvo;
@@ -80,10 +80,10 @@ public class CustomerRegisterManager {
 		System.out.println("================================================================");
 		System.out.println("\t\t\t  " + customer.getCustomer_name() + "님의 정보");
 		System.out.println("================================================================");
-		System.out.println(" 등급 | 누적결제금액 | 포인트 ");
+		System.out.println(" 등급    누적결제금액    포인트      ");
 		System.out.println("----------------------------------------------------------------");
-		System.out.println(" " + customer.getCustomer_grade() + " | " + customer.getCustomer_accumulated_payment()
-				+ " | " + customer.getCustomer_points());
+		
+		System.out.printf(" %-5s  %-10d  %-8d  \n", customer.getCustomer_grade(),customer.getCustomer_accumulated_payment(),customer.getCustomer_points());
 		System.out.println("================================================================");
 	}
 

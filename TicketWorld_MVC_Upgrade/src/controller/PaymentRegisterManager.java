@@ -1,5 +1,6 @@
 package controller;
 
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -17,6 +18,7 @@ public class PaymentRegisterManager {
 	public static void cartPayment(ArrayList<CartVO> cartList) {
 		CustomerVO cvo = TicketWorldMain.customer;
 		PaymentVO payvo = new PaymentVO();
+		int payment_id = -1;
 		System.out.print("장바구니에 있는 모든 항목을 결제하시겠습니까? Y | N ");
 		String str = sc.nextLine();
 		if (str.equalsIgnoreCase("Y")) {
@@ -29,7 +31,7 @@ public class PaymentRegisterManager {
 				int totalAmount = CartRegisterManager.calcPrice();
 				int totalPayment = calcTotalPrice(totalAmount);
 				// 결제 정보 입력하기
-				payvo = paymentRegister(cvo, CartRegisterManager.cartList(), totalPayment);
+				payment_id = paymentRegister(cvo, cartList, totalPayment);
 
 			} else {
 				System.out.print("배송받을 고객명을 입력하세요. ");
@@ -43,10 +45,10 @@ public class PaymentRegisterManager {
 				int totalAmount = CartRegisterManager.calcPrice();
 				int totalPayment = calcTotalPrice(totalAmount);
 				// 결제 정보 입력하기
-				payvo = paymentRegister(cvo, name, phone, address, cartList, totalPayment);
+				payment_id = paymentRegister(cvo, name, phone, address, cartList, totalPayment);
 			}
 			// 결제 내역 출력하기
-			paydao.getPayment(payvo);
+			paydao.getPayment(payment_id);
 
 			// 장바구니 비우기
 			cartdao.setCartDelete(cvo.getCustomer_id());
@@ -54,7 +56,7 @@ public class PaymentRegisterManager {
 	}
 
 	// 결제 정보 입력하기(수신인!=고객)
-	public static PaymentVO paymentRegister(CustomerVO cvo, String name, String phone, String address,
+	public static int paymentRegister(CustomerVO cvo, String name, String phone, String address,
 			ArrayList<CartVO> cartList, int totalPayment) {
 		PaymentVO payvo = null;
 		String customer_id = cvo.getCustomer_id();
@@ -62,36 +64,38 @@ public class PaymentRegisterManager {
 		String recipient_phone = phone;
 		String recipient_address = address;
 		int total_payment_amount = totalPayment;
+		int payment_id = -1;
 		for (int i = 0; i < cartList.size(); i++) {
 			int performance_id = cartList.get(i).getPerformance_id();
 			String performance_name = cartList.get(i).getPerformance_name();
 			String reservation_seats = cartList.get(i).getReservation_seats();
 			int total_reservation_seats = cartList.get(i).getTotal_reservation_seats();
-			payvo = new PaymentVO(customer_id, performance_id, performance_name, recipient_name, recipient_phone, recipient_address,
-					reservation_seats, total_reservation_seats, total_payment_amount);
-			paydao.setPaymentRegister(payvo);
+			payvo = new PaymentVO(customer_id, performance_id, performance_name, recipient_name, recipient_phone,
+					recipient_address, reservation_seats, total_reservation_seats, total_payment_amount);
+			payment_id = paydao.setPaymentRegister(payvo);
 		}
-		return payvo;
+		return payment_id;
 	}
 
 	// 결제 정보 입력하기(수신인=고객)
-	public static PaymentVO paymentRegister(CustomerVO cvo, ArrayList<CartVO> cartList, int totalPayment) {
+	public static int paymentRegister(CustomerVO cvo, ArrayList<CartVO> cartList, int totalPayment) {
 		PaymentVO payvo = null;
 		String customer_id = cvo.getCustomer_id();
 		String recipient_name = cvo.getCustomer_name();
 		String recipient_phone = cvo.getCustomer_phone();
 		String recipient_address = cvo.getCustomer_address();
 		int total_payment_amount = totalPayment;
+		int payment_id = -1;
 		for (int i = 0; i < cartList.size(); i++) {
 			int performance_id = cartList.get(i).getPerformance_id();
 			String performance_name = cartList.get(i).getPerformance_name();
 			String reservation_seats = cartList.get(i).getReservation_seats();
 			int total_reservation_seats = cartList.get(i).getTotal_reservation_seats();
-			payvo = new PaymentVO(customer_id, performance_id,performance_name, recipient_name, recipient_phone, recipient_address,
-					reservation_seats, total_reservation_seats, total_payment_amount);
-			paydao.setPaymentRegister(payvo);
+			payvo = new PaymentVO(customer_id, performance_id, performance_name, recipient_name, recipient_phone,
+					recipient_address, reservation_seats, total_reservation_seats, total_payment_amount);
+			payment_id = paydao.setPaymentRegister(payvo);
 		}
-		return payvo;
+		return payment_id;
 	}
 
 	// 결제 계산 함수
@@ -138,7 +142,8 @@ public class PaymentRegisterManager {
 	public static void printPaymentList(String cus_id) {
 		paydao.getPaymentList(cus_id);
 	}
-	//결제백업테이블에서 결제내역 출력
+
+	// 결제백업테이블에서 결제내역 출력
 	public static void printPaymentBackList(String cus_id) {
 		paydao.getPaymentBackList(cus_id);
 	}

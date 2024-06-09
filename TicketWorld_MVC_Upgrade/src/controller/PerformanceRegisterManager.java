@@ -19,9 +19,14 @@ public class PerformanceRegisterManager {
 	// 공연목록 출력기능구현
 	public static void printPerformanceList(ArrayList<PerformanceVO> performanceInfoList) {
 		System.out.println("----------------------------------------------------------------");
-		System.out.println(" 공연ID | 공연명 | 장르 | 공연일 | 장소 | 제한연령 | 잔여좌석/총좌석 | 티켓가격 ");
+		System.out.println(" 공연ID  공연일        장르    제한연령  잔여좌석/총좌석  티켓가격    공연명     장소     ");
 		System.out.println("----------------------------------------------------------------");
-		performanceInfoList.forEach(e -> System.out.println(e));
+		for (PerformanceVO vo : performanceInfoList) {
+			System.out.printf(" %-5s  %-10s  %-4s  %-4d  %4d/%-4d  %-6d  %-10s  %-6s \n", vo.getPerformance_id(),
+					vo.getPerformance_day(), vo.getPerformance_genre(), vo.getPerformance_limit_age(),
+					vo.calcRemainingSeat(), vo.getPerformance_total_seats(), vo.getPerformance_ticket_price(),
+					vo.getPerformance_name(), vo.getPerformance_venue());
+		}
 		System.out.println("----------------------------------------------------------------");
 	}
 
@@ -86,7 +91,7 @@ public class PerformanceRegisterManager {
 
 	// 공연정보 삭제기능구현
 	public static void performanceDelete() {
-		System.out.print("삭제할 공연ID>>");
+		System.out.print("삭제할 공연ID>> ");
 		int p_id = sc.nextInt();
 		sc.nextLine();
 

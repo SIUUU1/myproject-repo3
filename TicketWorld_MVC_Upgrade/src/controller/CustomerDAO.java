@@ -6,21 +6,25 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+
+import main.TicketWorldMain;
 import model.CustomerVO;
+import oracle.jdbc.OracleTypes;
 
 public class CustomerDAO {
 	// 회원목록리스트함수
 	public void getCustomerTotalList() {
-		String sql = "select * from customers order by customer_id";
 		Connection con = null;
-		PreparedStatement pstmt = null;
+		CallableStatement cstmt = null;
 		ResultSet rs = null;
 		try {
 			con = DBUtil.makeConnection();
-			pstmt = con.prepareStatement(sql);
-			rs = pstmt.executeQuery();
+			cstmt = con.prepareCall("{CALL CUSTOMERS_PRINT_PROC(?)}");
+			cstmt.registerOutParameter(1, OracleTypes.CURSOR);
+			cstmt.executeQuery();
+			rs = (ResultSet) cstmt.getObject(1);
 			System.out.println("----------------------------------------------------------------");
-			System.out.println(" ID | 등급 | PW | 이름 | 전화번호 | 이메일 | 주소 | 나이 | 누적결제금액 | 포인트 | 포인트적립률 | 구매할인율 ");
+			System.out.println(" ID          등급     PW          이름    전화번호           이메일                   주소          나이   누적결제금액      포인트       포인트적립률  구매할인율 ");
 			System.out.println("----------------------------------------------------------------");
 			while (rs.next()) {
 				CustomerVO cvo = new CustomerVO();
@@ -36,13 +40,19 @@ public class CustomerDAO {
 				cvo.setCustomer_points(rs.getInt("customer_points"));
 				cvo.setCustomer_point_ratio(rs.getDouble("customer_point_ratio"));
 				cvo.setCustomer_sale_ratio(rs.getDouble("customer_sale_ratio"));
+				System.out.printf(" %-10s  %-5s  %-10s  %-4s  %-13s  %-20s  %-10s  %-3d  %-10d  %-8d  %-6f  %-5f \n",
+						rs.getString("customer_id"), rs.getString("customer_grade"), rs.getString("customer_pw"),
+						rs.getString("customer_name"), rs.getString("customer_phone"), rs.getString("customer_email"),
+						rs.getString("customer_address"), rs.getInt("customer_age"),
+						rs.getInt("customer_accumulated_payment"), rs.getInt("customer_points"),
+						rs.getDouble("customer_point_ratio"), rs.getDouble("customer_sale_ratio"));
 				System.out.println(cvo.toString());
 			}
 			System.out.println("----------------------------------------------------------------");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			DBUtil.closeResources(con, pstmt, rs);
+			DBUtil.closeResources(con, cstmt, rs);
 		}
 	}
 
@@ -154,15 +164,16 @@ public class CustomerDAO {
 	// 로그인 시 정보확인함수
 	public CustomerVO loginCustomerRegister(String login_id, String login_pw) {
 		CustomerVO cvo = null;
-		String sql = "select * from customers where customer_id = ?";
 		Connection con = null;
-		PreparedStatement pstmt = null;
+		CallableStatement cstmt = null;
 		ResultSet rs = null;
 		try {
 			con = DBUtil.makeConnection();
-			pstmt = con.prepareStatement(sql);
-			pstmt.setString(1, login_id);
-			rs = pstmt.executeQuery();
+			cstmt = con.prepareCall("{CALL CUS_LOGIN_PROC(?,?)}");
+			cstmt.setString(1, login_id);
+			cstmt.registerOutParameter(2, OracleTypes.CURSOR);
+			cstmt.executeQuery();
+			rs = (ResultSet) cstmt.getObject(2);
 			if (rs.next()) {
 				if (login_pw.equals(rs.getString("customer_pw"))) {
 					// System.out.println("로그인 성공");
@@ -188,24 +199,25 @@ public class CustomerDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			DBUtil.closeResources(con, pstmt);
+			DBUtil.closeResources(con, cstmt, rs);
 		}
 		return cvo;
 	}
 
 	// 본인 확인함수
 	public String identificationCustomerRegister(String find_name, String find_phone) {
-		String sql = "select customer_id from customers where customer_name = ? AND customer_phone = ?";
 		String customer_id = null;
 		Connection con = null;
-		PreparedStatement pstmt = null;
+		CallableStatement cstmt = null;
 		ResultSet rs = null;
 		try {
 			con = DBUtil.makeConnection();
-			pstmt = con.prepareStatement(sql);
-			pstmt.setString(1, find_name);
-			pstmt.setString(2, find_phone);
-			rs = pstmt.executeQuery();
+			cstmt = con.prepareCall("{CALL IDENTIFY_PROC(?,?,?)}");
+			cstmt.setString(1, find_name);
+			cstmt.setString(2, find_phone);
+			cstmt.registerOutParameter(3, OracleTypes.CURSOR);
+			cstmt.executeQuery();
+			rs = (ResultSet) cstmt.getObject(3);
 			if (rs.next()) {
 				customer_id = rs.getString("customer_id");
 			} else {
@@ -214,7 +226,7 @@ public class CustomerDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			DBUtil.closeResources(con, pstmt);
+			DBUtil.closeResources(con, cstmt, rs);
 		}
 		return customer_id;
 	}
@@ -255,7 +267,7 @@ public class CustomerDAO {
 			cstmt.registerOutParameter(2, Types.INTEGER);
 			cstmt.executeUpdate();
 			int count = cstmt.getInt(2);
- 			if (count == 0) {
+			if (count == 0) {
 				flag = true;
 			} else {
 				System.out.println("중복된 아이디입니다.");
